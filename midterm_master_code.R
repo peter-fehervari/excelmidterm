@@ -39,11 +39,16 @@ Tick_confirmation_prob <- 0.5 # P(dog had a confirmed tick| no protection)
 Temp_min <- 38
 Temp_max <- 41 #Fever from 39.2
 
+# quick logit to prob converter
 logit2prob <- function(logit){
   odds <- exp(logit)
-  prob <- odds / (1 + odds) # quick logitto prob concverter
+  prob <- odds / (1 + odds) 
   return(prob)
 }
+# level selector for randomly chosen vars. 
+level_selector<-function(x){sample(levels(data[,x]),1)}
+
+
 ########## Generate data ############
 
 id <- 1:N 
@@ -89,28 +94,73 @@ colors_sel <- c("black","red","green","yellow","blue","pink")
 line_type <- c("solid","dashed","dotted")
 factor_vars <-c("sex","tick_protection","tick_confirmed","smear_positive")
 numeric_vars <-c("body_mass","body_temp","age")
-level_selector<-function(x){sample(levels(data[,x]),1)}
+
 
 # Formatting tasks
 tasks_table_formatting <- data.frame(Formatting= c(" Increase the font size to 14pts and set font style to Bold for coloumn headers (first row).",
-                                   "Adjust coloumn width to fit data for every coloumn and align coloumn headers to center.",
-                                   paste("Align all values in the",sample(id_vars,1),"column to center."),
-                                   paste("Create a",sample(colors_sel,1) ,"border around the coloumn headers using thick", sample (line_type,1),"lines."),
-                                   "Freeze the top row,"))
+                                                   "Adjust coloumn width to fit data for every coloumn and align coloumn headers to center.",
+                                                   paste("Align all values in the",sample(id_vars,1),"column to center."),
+                                                   paste("Create a",sample(colors_sel,1) ,"border around the coloumn headers using thick", sample (line_type,1),"lines."),
+                                                   "Freeze the top row,",
+                                                   "Sort the data ascending by age."))
 
-# Function tasks
+#### Function tasks
 #inits
 countif_var <- c(sample(factor_vars,1))
 countif_var_level <- level_selector(countif_var)
 
-tasks_table_functions <- data.frame(Functions = c(paste("Calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level ,". Use functions!")
+averageif_var <- sample(numeric_vars,1)
+averageif_condition_var <- c(sample(factor_vars,1))
+averageif_condition_var_level <- level_selector(averageif_condition_var)
+
+
+tasks_table_functions <- data.frame(Functions = c("Type Fever in cell I1. For each row, evaluate whether the body_temp is higher than 39.1 C. Type YES if the value is over and NO if it is not.",
+                                                  paste("In cell XXXX, calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level),
+                                                  paste("In cell XXXX, calculate the mean",averageif_var,"for observations where",averageif_condition_var,"is",averageif_condition_var_level )
                                                  ))
-        
+
+####Chart tasks
+#inits
+
+boxplot_cat_var <- c(sample(factor_vars,1))
+boxplot_num_var <- sample(numeric_vars,1)
+
+scatterplot_num_var <- sample(numeric_vars,1)
+scatterplot_num_var2 <- sample(numeric_vars,1)
+
+tasks_table_charts <- data.frame(Charts =c(paste("Create a boxplot of the", boxplot_num_var, "variable. Use the",boxplot_cat_var,"variable for grouping."),
+                                           "Add an appropriate title for the chart. Change the colours of the boxes to black and white. Add appropriate Y axis name.",
+                                           paste("Create a scatter chart with", scatterplot_num_var, "and", scatterplot_num_var2, "variables."),
+                                           "Add an appropriate title for the chart.Change the dot colours to black. Add appropriate X and Y axis names. Delete horizontal and vertical grid lines."
+                                           ))
+
+#### Pivot tasks
+#inits
+pivot_cat_var1 <- c(sample(factor_vars,1))
+pivot_cat_var2 <- c(sample(factor_vars,1))
+pivot_num_var <- sample(numeric_vars,1)
+
+tasks_table_pivot <- data.frame(Pivot=c(paste("Create a pivot table on a new sheet. For row variables select", pivot_cat_var1, "for coloumns, select the",pivot_cat_var2,"variable."),
+                                        paste("For values, use the",pivot_num_var, "variable. Change the value field settings of", pivot_num_var, "to Average."),
+                                        "Select the most distasteful design (from the predefined list) for the pivot table.",
+                                        "Insert a pivot coloumn chart.",
+                                        "Add an appropriate title for the chart. Add appropriate Y axis label. Change the coloumn colors to black and white."
+                                              ))
 
 
+######## Creating the workbook ##############
 wb<-createWorkbook(type="xlsx")
+
+cell_style_task_title <- CellStyle(wb) +
+  Font(wb, heightInPoints=12, isBold=TRUE, isItalic=FALSE) +
+  Alignment(h="ALIGN_CENTER")
+
 sheet <- createSheet(wb, sheetName = "Data")
+sheet2 <- createSheet(wb, sheetName = "Tasks")
 addDataFrame(data, sheet, startRow=1, startColumn=1,row.names = FALSE)
-addDataFrame(tasks, sheet, startRow=1, startColumn=12,row.names = FALSE)
-addDataFrame(tasks2, sheet, startRow=6, startColumn=12,row.names = FALSE)
+addDataFrame(tasks_table_formatting, sheet2, startRow=2, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
+addDataFrame(tasks_table_functions, sheet2, startRow=10, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
+addDataFrame(tasks_table_charts, sheet2, startRow=15, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
+addDataFrame(tasks_table_pivot, sheet2, startRow=21, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 saveWorkbook(wb, "Data_trial.xlsx")
+
