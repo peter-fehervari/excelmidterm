@@ -12,7 +12,7 @@ library(xlsx)
   # body mass: random from normal dist, with different mu and sigma for the sexes
   # protected against ticks?
   # tick confirmed
-  # body temp: in celsius 38-39.2, fever upto 41  
+  # body temp: in celsius 38-39.2 over 39.2 is fever (upto 41)  
   # diagnosis blood smear test: random, with increasing probability with no tick, tick confirmed and fever
 
 ########## Init #####################
