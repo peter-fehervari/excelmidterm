@@ -1,6 +1,6 @@
 ########### Libraries #############
 library(xlsx)
-
+#library(openxlsx)
 ########### Description #############
 
 # The dataset is dogs with babesiosis tests. All values are randomized for each iteration.
@@ -16,26 +16,19 @@ library(xlsx)
   # diagnosis blood smear test: random, with increasing probability with no tick, tick confirmed and fever
 
 ########## Init #####################
-set.seed(1717)
-
+#set.seed(1717)
+tests <- 3 # number of total tests to generate
 Dognames <- read.table("Dog_names.csv",h = T ,sep = ",")
-
 N <- 400 # Number of total dogs 
-
 Prob_male <- 0.5 # Sex ratio  
-
 Min_age_mon <- 10 #in months, not too small to avoid simulating juv. dog weights
 Max_age_mon <- 156
-
 Mu_body_mass_male <- 16
 Mu_body_mass_female <- 11
-
 Sigma_body_mass_male <- 4
 Sigma_body_mass_female <- 3
-
 Tick_protection_prevalence <- 0.3 # Tick protection prevalence for all dogs r
 Tick_confirmation_prob <- 0.5 # P(dog had a confirmed tick| no protection) 
-
 Temp_min <- 38
 Temp_max <- 41 #Fever from 39.2
 
@@ -49,8 +42,10 @@ logit2prob <- function(logit){
 level_selector<-function(x){sample(levels(data[,x]),1)}
 
 
-########## Generate data ############
-
+########## Generate Midterms ############
+for ( i in 1:tests)
+{
+  
 id <- 1:N 
 
 dognames <-ifelse(sex=="Male", yes = sample(Dognames$MALE.DOG.NAMES, replace = F),
@@ -96,11 +91,16 @@ factor_vars <-c("sex","tick_protection","tick_confirmed","smear_positive")
 numeric_vars <-c("body_mass","body_temp","age")
 
 
-# Formatting tasks
+### Formatting tasks
+#inits
+format_alignment_var <- sample(id_vars,1)
+format_color_var <- sample(colors_sel,1)
+format_line_type_var <- sample (line_type,1)
+
 tasks_table_formatting <- data.frame(Formatting= c(" Increase the font size to 14pts and set font style to Bold for coloumn headers (first row).",
                                                    "Adjust coloumn width to fit data for every coloumn and align coloumn headers to center.",
-                                                   paste("Align all values in the",sample(id_vars,1),"column to center."),
-                                                   paste("Create a",sample(colors_sel,1) ,"border around the coloumn headers using thick", sample (line_type,1),"lines."),
+                                                   paste("Align all values in the",format_alignment_var,"column to center."),
+                                                   paste("Create a",format_color_var ,"border around the coloumn headers using thick", format_line_type_var,"lines."),
                                                    "Freeze the top row,",
                                                    "Sort the data ascending by age."))
 
@@ -114,9 +114,9 @@ averageif_condition_var <- c(sample(factor_vars,1))
 averageif_condition_var_level <- level_selector(averageif_condition_var)
 
 
-tasks_table_functions <- data.frame(Functions = c("Type Fever in cell I1. For each row, evaluate whether the body_temp is higher than 39.1 C. Type YES if the value is over and NO if it is not.",
-                                                  paste("In cell XXXX, calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level),
-                                                  paste("In cell XXXX, calculate the mean",averageif_var,"for observations where",averageif_condition_var,"is",averageif_condition_var_level )
+tasks_table_functions <- data.frame(Functions = c("Type Fever in cell J1. For each row, evaluate whether the body_temp is higher than 39.1 C. Type YES if the value is over and NO if it is not.",
+                                                  paste("In cell L2, calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level),
+                                                  paste("In cell L3, calculate the mean",averageif_var,"for observations where",averageif_condition_var,"is",averageif_condition_var_level )
                                                  ))
 
 ####Chart tasks
@@ -147,20 +147,33 @@ tasks_table_pivot <- data.frame(Pivot=c(paste("Create a pivot table on a new she
                                         "Add an appropriate title for the chart. Add appropriate Y axis label. Change the coloumn colors to black and white."
                                               ))
 
+#Points
+tasks_table_points <- data.frame(Points=c(1,1,1,1,2,2,"","",2,2,2,"","",4,2,4,2,"","",4,2,2,4,2))
 
 ######## Creating the workbook ##############
 wb<-createWorkbook(type="xlsx")
 
-cell_style_task_title <- CellStyle(wb) +
-  Font(wb, heightInPoints=12, isBold=TRUE, isItalic=FALSE) +
+# Data sheet 
+sheet <- createSheet(wb, sheetName = "Data")
+addDataFrame(data, sheet, startRow=1, startColumn=1,row.names = FALSE)
+
+# Tasks sheet
+sheet2 <- createSheet(wb, sheetName = "Tasks")
+cell_style_task_title <- CellStyle(wb) + 
+  Font(wb, heightInPoints=12, isBold=TRUE) +
   Alignment(h="ALIGN_CENTER")
 
-sheet <- createSheet(wb, sheetName = "Data")
-sheet2 <- createSheet(wb, sheetName = "Tasks")
-addDataFrame(data, sheet, startRow=1, startColumn=1,row.names = FALSE)
+cell_style_task_points <- CellStyle(wb) + 
+  Font(wb) +
+  Alignment(h="ALIGN_CENTER")
+
 addDataFrame(tasks_table_formatting, sheet2, startRow=2, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_functions, sheet2, startRow=10, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_charts, sheet2, startRow=15, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_pivot, sheet2, startRow=21, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
-saveWorkbook(wb, "Data_trial.xlsx")
+addDataFrame(tasks_table_points, sheet2, startRow=2, startColumn=2,row.names = FALSE,colnamesStyle = cell_style_task_title,)
 
+autoSizeColumn(sheet2, colIndex=3)
+# Export
+saveWorkbook(wb, paste0("midterm",i,".xlsx"))
+}

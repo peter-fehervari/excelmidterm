@@ -1,0 +1,8 @@
+The midterm are all different and assigned to each individual by the practical teacher. Please pay close attention to his or her orders when selecting the tests.
+
+Please carefully read the description below!
+The dataset provided is derives from an imaginary small animal clinic, where Vets recorded data on the dog patience presenting with babesiosis symptoms. Babesiosis is a tick-borne infection caused by either of the several closely related protozoal parasites in the Babesia genus. These parasites attack red-blood cells and can cause a wide array of symptoms, therefore diagnosis is not necessarily easy. Fever is generally an important symptomm, however the most widespread differential diagnosis is carried out with directly observing the parasite in a blood smear.
+
+The file has two worksheets, Data and Tasks. You need to follow the tasks as closely as you possibly can by using the methods learned on the practicals. 
+
+The dataset of Your midterm contains the ID of the dog (id), the name of the dog (dogname), the sex of the dog (sex), the weight (body_mass), the age of the dog in months (age), if there was any prior tick prevention (tick_protection), if the presence of ticks were confirmed on the dog (tick_confirmed), the body temperature (body_temp) and the result of the blood smear test (smear_positive).
