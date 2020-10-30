@@ -1,6 +1,6 @@
 ########### Libraries #############
-library(xlsx)
-#library(openxlsx)
+#library(xlsx)
+library(openxlsx)
 ########### Description #############
 
 # The dataset is dogs with babesiosis tests. All values are randomized for each iteration.
@@ -12,23 +12,30 @@ library(xlsx)
   # body mass: random from normal dist, with different mu and sigma for the sexes
   # protected against ticks?
   # tick confirmed
-  # body temp: in celsius 38-39.2 over 39.2 is fever (upto 41)  
+  # body temp: in celsius 38-39.2, fever upto 41  
   # diagnosis blood smear test: random, with increasing probability with no tick, tick confirmed and fever
 
 ########## Init #####################
-#set.seed(1717)
-tests <- 55 # number of total tests to generate
+set.seed(1717)
+
 Dognames <- read.table("Dog_names.csv",h = T ,sep = ",")
+
 N <- 400 # Number of total dogs 
+
 Prob_male <- 0.5 # Sex ratio  
+
 Min_age_mon <- 10 #in months, not too small to avoid simulating juv. dog weights
 Max_age_mon <- 156
+
 Mu_body_mass_male <- 16
 Mu_body_mass_female <- 11
+
 Sigma_body_mass_male <- 4
 Sigma_body_mass_female <- 3
+
 Tick_protection_prevalence <- 0.3 # Tick protection prevalence for all dogs r
 Tick_confirmation_prob <- 0.5 # P(dog had a confirmed tick| no protection) 
+
 Temp_min <- 38
 Temp_max <- 41 #Fever from 39.2
 
@@ -42,16 +49,14 @@ logit2prob <- function(logit){
 level_selector<-function(x){sample(levels(data[,x]),1)}
 
 
-########## Generate Midterms ############
-for ( i in 1:tests)
-{
-  
-id <- 1:N 
+########## Generate data ############
 
-sex <- sample(c("Male","Female"), size = N, prob = c(Prob_male, 1-Prob_male),replace = T)
+id <- 1:N 
 
 dognames <-ifelse(sex=="Male", yes = sample(Dognames$MALE.DOG.NAMES, replace = F),
                   no = sample(Dognames$FEMALE.DOG.NAMES, replace = F))
+
+sex <- sample(c("Male","Female"), size = N, prob = c(Prob_male, 1-Prob_male),replace = T)
 
 age <-sample(Min_age_mon:Max_age_mon, size=N, replace = T)
 
@@ -114,9 +119,9 @@ averageif_condition_var <- c(sample(factor_vars,1))
 averageif_condition_var_level <- level_selector(averageif_condition_var)
 
 
-tasks_table_functions <- data.frame(Functions = c("Type Fever in cell J1. For each row, evaluate whether the body_temp is higher than 39.1 C. Type YES if the value is over and NO if it is not.",
-                                                  paste("In cell L2, calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level),
-                                                  paste("In cell L3, calculate the mean",averageif_var,"for observations where",averageif_condition_var,"is",averageif_condition_var_level )
+tasks_table_functions <- data.frame(Functions = c("Type Fever in cell I1. For each row, evaluate whether the body_temp is higher than 39.1 C. Type YES if the value is over and NO if it is not.",
+                                                  paste("In cell XXXX, calculate the number of individuals in the" ,countif_var , "coloumn that have the value of",countif_var_level),
+                                                  paste("In cell XXXX, calculate the mean",averageif_var,"for observations where",averageif_condition_var,"is",averageif_condition_var_level )
                                                  ))
 
 ####Chart tasks
@@ -147,33 +152,59 @@ tasks_table_pivot <- data.frame(Pivot=c(paste("Create a pivot table on a new she
                                         "Add an appropriate title for the chart. Add appropriate Y axis label. Change the coloumn colors to black and white."
                                               ))
 
-#Points
-tasks_table_points <- data.frame(Points=c(1,1,1,1,2,2,"","",2,2,2,"","",4,2,4,2,"","",4,2,2,4,2))
 
 ######## Creating the workbook ##############
-wb<-createWorkbook(type="xlsx")
+midterm_id <- 1
+wb<-createWorkbook(creator="FP", title = paste0("Midterm",midterm_id))
 
 # Data sheet 
-sheet <- createSheet(wb, sheetName = "Data")
-addDataFrame(data, sheet, startRow=1, startColumn=1,row.names = FALSE)
+sheet <- addWorksheet(wb,  sheetName = "Data")
+writeData(wb,x=data, "Data", startRow=1)
 
 # Tasks sheet
-sheet2 <- createSheet(wb, sheetName = "Tasks")
+sheet2 <- addWorksheet(wb, sheetName = "Tasks")
+
 cell_style_task_title <- CellStyle(wb) + 
   Font(wb, heightInPoints=12, isBold=TRUE) +
   Alignment(h="ALIGN_CENTER")
 
-cell_style_task_points <- CellStyle(wb) + 
-  Font(wb) +
-  Alignment(h="ALIGN_CENTER")
+writeData(wb,
+          x = tasks_table_formatting,
+          sheet = "Tasks",
+          startCol = 3,
+          startRow = 2)
 
-addDataFrame(tasks_table_formatting, sheet2, startRow=2, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
+writeData(wb,
+          x=tasks_table_functions,
+          sheet = "Tasks")
+
+
+startRow=2, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_functions, sheet2, startRow=10, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_charts, sheet2, startRow=15, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
 addDataFrame(tasks_table_pivot, sheet2, startRow=21, startColumn=3,row.names = FALSE,colnamesStyle = cell_style_task_title)
-addDataFrame(tasks_table_points, sheet2, startRow=2, startColumn=2,row.names = FALSE,colnamesStyle = cell_style_task_title,)
 
-autoSizeColumn(sheet2, colIndex=3)
-# Export
-saveWorkbook(wb, paste0("midterm",i,".xlsx"))
-}
+#Solutions sheet
+
+sheet3 <- createSheet(wb, sheetName = "Solutions")
+addDataFrame(data, sheet3, startRow=1, startColumn=1,
+             row.names = FALSE)
+
+# Task 1
+formatting_task_1_cell_style <- CellStyle(wb) + 
+  Font(wb, heightInPoints=14, isBold=TRUE) +
+  Alignment(h="ALIGN_CENTER",wrapText = T) 
+
+rows <- getRows(sheet3,rowIndex=1)
+cells <- getCells(rows, colIndex = 1:ncol(data))
+setCellStyle(cells, formatting_task_1_cell_style)
+
+# Task 2
+autoSizeColumn(sheet = sheet3, colIndex = ncol(data))
+Border(color=format_color_var, position = c("TOP","BOTTOM"),
+       pen = "BORDER_THICK")
+
+
+match(format_alignment_var, colnames(data))
+saveWorkbook(wb, "Data_trial.xlsx")
+
